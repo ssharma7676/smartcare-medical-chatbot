@@ -13,6 +13,18 @@ SmartCare is designed to work only with public domain medical sources.
 
 > **Important:** Do not use or distribute non-public domain content with this project.
 
+
+## MedlinePlus Data
+
+This repository does **not** include MedlinePlus data files or embeddings.  
+To use MedlinePlus data:
+
+1. Download the XML from the [official MedlinePlus website](https://medlineplus.gov/xml.html).
+2. Run `upload_medlineplus.py` to process and upload the data to Pinecone.
+
+See the script and comments for details.
+
+
 ### Adding Your Own Data Sources
 - Add your ingestion code to `src/`
 - Update the retriever logic in `app.py`
