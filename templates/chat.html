@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartCare - Medical AI Assistant</title>
+  
+  <!-- External Resources -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <!-- =============================================================================
+       NAVIGATION BUTTONS
+       ============================================================================= -->
+  <a href="{{ url_for('history') }}" class="history-button">My History</a>
+  <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+
+  <!-- =============================================================================
+       MAIN CONTAINER
+       ============================================================================= -->
+  <div class="container">
+    
+    <!-- Header Section -->
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <h1>SmartCare</h1>
+        </div>
+        <p class="subtitle">Your AI-powered health companion</p>
+      </div>
+    </header>
+
+    <!-- =============================================================================
+         CHAT WINDOW - Message Display Area
+         ============================================================================= -->
+    <main id="chat-window" class="chat-window">
+      
+      <!-- Existing Messages from Database -->
+      {% for message in messages %}
+        <div class="message {{ message.sender }}" data-message-id="{{ message.id }}">
+          
+          <!-- Avatar Section -->
+          <div class="avatar">
+            {% if message.sender == 'bot' %}
+              <!-- Bot Avatar - Stethoscope Icon (PNG) -->
+              <img src="{{ url_for('static', filename='stethoscope.png') }}" alt="Bot Avatar" class="bot-avatar-img" width="24" height="24" />
+            {% else %}
+              <!-- User Avatar - Person Icon -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+              </svg>
+            {% endif %}
+          </div>
+
+          <!-- Message Content Section -->
+          {% if message.sender == 'bot' %}
+            <div class="message-content">
+              <!-- Bot Message Text with Text-to-Speech Button -->
+              <div class="text">{{ message.text }}
+                <button class="speaker-btn" data-text="{{ message.text | replace("'", "\\'") | replace('"', '\\"') }}" title="Listen to message">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 5L6 9H2V15H6L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15.54 8.46C16.4774 9.39764 17.0039 10.7538 17.0039 12.165C17.0039 13.5762 16.4774 14.9324 15.54 15.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19.07 4.93C20.9447 6.80528 21.9979 9.34836 21.9979 12.165C21.9979 14.9816 20.9447 17.5247 19.07 19.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Sources Section (if available) -->
+              {% if message.sources and message.sources != 'null' %}
+                <button class="show-sources-btn" onclick="toggleSources({{ message.id }})" data-message-id="{{ message.id }}">
+                  Show sources
+                </button>
+                <div class="sources-container" id="sources-{{ message.id }}" style="display: none;">
+                  <div class="sources-content">
+                    <h4>Sources:</h4>
+                    <div class="sources-list" id="sources-list-{{ message.id }}">
+                      <!-- Sources will be loaded here dynamically -->
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          {% else %}
+            <!-- User Message Text -->
+            <div class="text">{{ message.text }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <!-- Welcome Message (shown when no messages exist) -->
+      {% if not messages %}
+        <div class="welcome-message" data-fresh="true">
+          <div class="welcome-avatar" style="display: flex; align-items: center; justify-content: center;">
+            <img src="{{ url_for('static', filename='stethoscope.png') }}" alt="Bot Avatar" class="bot-avatar-img" width="30" height="30" />
+          </div>
+          <div class="welcome-text">
+            <h3>Hello! I'm your medical assistant</h3>
+            <p>Ask me anything about health, symptoms, or medical information. I'm here to help!</p>
+          </div>
+        </div>
+      {% endif %}
+    </main>
+
+    <!-- =============================================================================
+         CHAT INPUT FORM
+         ============================================================================= -->
+    <form id="chat-form" class="chat-form" onsubmit="event.preventDefault(); sendMessage();">
+      <div class="input-container">
+        <!-- Text Input Field -->
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Ask me anything about health..."
+        autocomplete="off"
+        required
+      />
+        
+        <!-- Microphone Button for Speech-to-Text -->
+        <button type="button" id="mic-btn" title="Speak to chat">
+          <i data-lucide="mic" class="mic-icon"></i>
+          <span class="mic-wave"></span>
+          <span class="mic-wave"></span>
+          <span class="mic-wave"></span>
+        </button>
+        
+        <!-- Clear Chat Button (shown only when messages exist) -->
+        {% if messages %}
+          <button type="button" class="clear-chat-btn" onclick="clearChat()" title="Clear conversation">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        {% endif %}
+        
+        <!-- Send Button -->
+        <button type="submit" aria-label="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- =============================================================================
+       JAVASCRIPT FUNCTIONALITY
+       ============================================================================= -->
+  <script>
+    // =============================================================================
+    // GLOBAL VARIABLES
+    // =============================================================================
+    const chatWindow = document.getElementById("chat-window");
+    const inputField = document.getElementById("user-input");
+
+    // =============================================================================
+    // MESSAGE MANAGEMENT FUNCTIONS
+    // =============================================================================
+
+    /**
+     * Appends a new message to the chat window
+     * @param {string} text - The message text
+     * @param {string} sender - 'user' or 'bot'
+     * @param {number} messageId - Optional message ID for sources
+     * @param {Array} sources - Optional sources array for bot messages
+     */
+    function appendMessage(text, sender, messageId = null, sources = null) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", sender);
+      if (messageId) {
+        msgDiv.setAttribute("data-message-id", messageId);
+      }
+
+      // PNG Icon for bot avatar
+      const botIcon = `<img src="/static/stethoscope.png" alt="Bot Avatar" class="bot-avatar-img" width="24" height="24" />`;
+      
+      const userIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+      </svg>`;
+
+      // Generate sources HTML if available
+      let sourcesHtml = '';
+      if (sender === 'bot' && sources && sources.length > 0) {
+        // Deduplicate sources by URL for display
+        const seenUrls = new Set();
+        const uniqueSources = sources.filter(source => {
+          if (seenUrls.has(source.url)) {
+            return false;
+          }
+          seenUrls.add(source.url);
+          return true;
+        });
+        
+        sourcesHtml = `
+          <button class="show-sources-btn" onclick="toggleSources(${messageId})" data-message-id="${messageId}">
+            Show sources
+          </button>
+          <div class="sources-container" id="sources-${messageId}" style="display: none;">
+            <div class="sources-content">
+              <h4>Sources:</h4>
+              <div class="sources-list" id="sources-list-${messageId}">
+                ${uniqueSources.map(source => `
+                  <div class="source-item">
+                    <span class="source-type">${source.type}</span>
+                    <a href="${source.url}" target="_blank" class="source-link">${source.name || source.url}</a>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Generate message HTML based on sender type
+      if (sender === 'bot') {
+        msgDiv.innerHTML = `
+          <div class="avatar">${botIcon}</div>
+          <div class="message-content">
+            <div class="text">${text}
+              <button class="speaker-btn" data-text="${text.replace(/'/g, "\\'").replace(/"/g, "\\\"")}" title="Listen to message">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 5L6 9H2V15H6L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15.54 8.46C16.4774 9.39764 17.0039 10.7538 17.0039 12.165C17.0039 13.5762 16.4774 14.9324 15.54 15.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M19.07 4.93C20.9447 6.80528 21.9979 9.34836 21.9979 12.165C21.9979 14.9816 20.9447 17.5247 19.07 19.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            ${sourcesHtml}
+          </div>
+        `;
+      } else {
+      msgDiv.innerHTML = `
+          <div class="avatar">${userIcon}</div>
+        <div class="text">${text}</div>
+      `;
+      }
+
+      chatWindow.appendChild(msgDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    /**
+     * Sends a message to the server and handles the response
+     */
+    async function sendMessage() {
+      const userText = inputField.value.trim();
+      if (!userText) return;
+
+      // Add user message to chat immediately
+      appendMessage(userText, "user");
+      inputField.value = "";
+
+      // Send message to server
+      const response = await fetch("/get", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `msg=${encodeURIComponent(userText)}`,
+      });
+
+      const data = await response.json();
+      const botReply = data.response;
+      const sources = data.sources;
+      
+      // Generate a temporary message ID for new messages
+      const tempMessageId = Date.now();
+      appendMessage(botReply, "bot", tempMessageId, sources);
+      
+      // Show clear button after first message
+      const clearBtn = document.querySelector('.clear-chat-btn');
+      if (clearBtn) {
+        clearBtn.style.display = 'flex';
+      }
+    }
+
+    // =============================================================================
+    // SOURCES MANAGEMENT FUNCTIONS
+    // =============================================================================
+
+    /**
+     * Toggles the visibility of sources for a specific message
+     * @param {number} messageId - The ID of the message
+     */
+    function toggleSources(messageId) {
+      const sourcesContainer = document.getElementById(`sources-${messageId}`);
+      const button = document.querySelector(`[data-message-id="${messageId}"] .show-sources-btn`);
+      
+      if (sourcesContainer.style.display === 'none') {
+        sourcesContainer.style.display = 'block';
+        button.textContent = 'Hide sources';
+        
+        // Load sources if not already loaded
+        const sourcesList = document.getElementById(`sources-list-${messageId}`);
+        if (sourcesList.children.length === 0) {
+          loadSources(messageId);
+        }
+      } else {
+        sourcesContainer.style.display = 'none';
+        button.textContent = 'Show sources';
+      }
+    }
+
+    /**
+     * Loads sources for a specific message from the server
+     * @param {number} messageId - The ID of the message
+     */
+    async function loadSources(messageId) {
+      try {
+        const response = await fetch(`/get_sources/${messageId}`);
+        const data = await response.json();
+        const sourcesList = document.getElementById(`sources-list-${messageId}`);
+        
+        if (data.sources && data.sources.length > 0) {
+          // Deduplicate sources by URL to prevent duplicates
+          const seenUrls = new Set();
+          const uniqueSources = data.sources.filter(source => {
+            if (seenUrls.has(source.url)) {
+              return false;
+            }
+            seenUrls.add(source.url);
+            return true;
+          });
+          
+          sourcesList.innerHTML = uniqueSources.map(source => `
+            <div class="source-item">
+              <span class="source-type">${source.type}</span>
+              <a href="${source.url}" target="_blank" class="source-link">${source.name || source.url}</a>
+            </div>
+          `).join('');
+        } else {
+          sourcesList.innerHTML = '<p>No sources available</p>';
+        }
+      } catch (error) {
+        console.error('Error loading sources:', error);
+        const sourcesList = document.getElementById(`sources-list-${messageId}`);
+        sourcesList.innerHTML = '<p>Error loading sources</p>';
+      }
+    }
+
+    // =============================================================================
+    // CHAT MANAGEMENT FUNCTIONS
+    // =============================================================================
+
+    /**
+     * Clears the current conversation and shows welcome message
+     */
+    function clearChat() {
+      if (confirm('Are you sure you want to clear this conversation? You can still view your chat history later.')) {
+        // Call backend to set session flag
+        fetch('/clear_chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            // Clear the chat window
+            const messages = chatWindow.querySelectorAll('.message');
+            messages.forEach(msg => msg.remove());
+            
+            // Show welcome message
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'welcome-message';
+            welcomeDiv.dataset.cleared = 'true'; // Mark as cleared
+            welcomeDiv.innerHTML = `
+              <div class="welcome-avatar" style="display: flex; align-items: center; justify-content: center;">
+                <img src="{{ url_for('static', filename='stethoscope.png') }}" alt="Bot Avatar" class="bot-avatar-img" width="30" height="30" />
+              </div>
+              <div class="welcome-text">
+                <h3>Hello! I'm your medical assistant</h3>
+                <p>Ask me anything about health, symptoms, or medical information. I'm here to help!</p>
+              </div>
+            `;
+            chatWindow.appendChild(welcomeDiv);
+            
+            // Hide the clear button since there are no messages
+            const clearBtn = document.querySelector('.clear-chat-btn');
+            if (clearBtn) {
+              clearBtn.style.display = 'none';
+            }
+          } else {
+            alert('Error clearing chat. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error clearing chat. Please try again.');
+        });
+      }
+    }
+
+    // =============================================================================
+    // TEXT-TO-SPEECH FUNCTIONALITY
+    // =============================================================================
+
+    /**
+     * Converts bot message text to speech with toggle functionality
+     * @param {string} text - The text to speak
+     * @param {HTMLElement} buttonElement - The speaker button element
+     */
+    function speakBotReply(text, buttonElement = null) {
+      if ('speechSynthesis' in window) {
+        // If speech is currently playing, stop it
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          if (buttonElement) {
+            buttonElement.classList.remove('speaking');
+            buttonElement.title = 'Listen to message';
+          }
+          return;
+        }
+        
+        // Remove apostrophes to prevent pronunciation issues
+        const cleanText = text.replace(/'/g, '');
+        
+        // Split text into sentences for better speech flow
+        const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+        let index = 0;
+
+        function speakNext() {
+          if (index < sentences.length) {
+            const utterance = new SpeechSynthesisUtterance(sentences[index].trim());
+
+            // Configure speech parameters BEFORE setting voice
+            utterance.lang = 'en-US';
+            utterance.rate = 1.05;
+            utterance.pitch = 1.08;
+            utterance.volume = 0.9;
+
+            // Set voice AFTER parameters to ensure it sticks
+            const voices = window.speechSynthesis.getVoices();
+            const googleVoice = voices.find(v => v.name === 'Google US English');
+            if (googleVoice) {
+              utterance.voice = googleVoice;
+            }
+
+            // When sentence ends, speak next one immediately
+            utterance.onend = speakNext;
+
+            // Handle speech errors
+            utterance.onerror = function() {
+              if (buttonElement) {
+                buttonElement.classList.remove('speaking');
+                buttonElement.title = 'Listen to message';
+              }
+            };
+
+            window.speechSynthesis.speak(utterance);
+            index++;
+          } else if (buttonElement) {
+            buttonElement.classList.remove('speaking');
+            buttonElement.title = 'Listen to message';
+          }
+        }
+
+        // Update button state when speech starts
+        if (buttonElement) {
+          buttonElement.classList.add('speaking');
+          buttonElement.title = 'Stop speaking';
+        }
+
+        // Small delay to ensure voices are loaded and voice selection is applied
+        setTimeout(() => {
+          speakNext();
+        }, 50);
+      }
+    }
+
+    // =============================================================================
+    // SPEECH-TO-TEXT FUNCTIONALITY
+    // =============================================================================
+
+    // Speech Recognition Setup
+    let recognition;
+    let isListening = false;
+
+    // Initialize speech recognition with browser compatibility
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+    } else if ('SpeechRecognition' in window) {
+      recognition = new SpeechRecognition();
+    }
+
+    if (recognition) {
+      // Configure speech recognition settings
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      // Speech recognition event handlers
+      recognition.onstart = function() {
+        isListening = true;
+        const micBtn = document.getElementById('mic-btn');
+        micBtn.classList.add('active');
+        micBtn.title = 'Click to stop listening';
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        inputField.value = transcript;
+        // Auto-send the message (commented out for user control)
+        // sendMessage();
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopListening();
+      };
+
+      recognition.onend = function() {
+        stopListening();
+      };
+
+      /**
+       * Stops the speech recognition and resets UI state
+       */
+      function stopListening() {
+        isListening = false;
+        const micBtn = document.getElementById('mic-btn');
+        micBtn.classList.remove('active');
+        micBtn.title = 'Speak to chat';
+      }
+
+      // Toggle microphone on/off
+      document.getElementById('mic-btn').onclick = function() {
+        if (isListening) {
+          recognition.stop();
+        } else {
+          recognition.start();
+        }
+      };
+    } else {
+      // Hide mic button if speech recognition is not supported
+      document.getElementById('mic-btn').style.display = 'none';
+    }
+
+    // =============================================================================
+    // INITIALIZATION
+    // =============================================================================
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Add event listeners for speaker buttons
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.speaker-btn')) {
+        const button = e.target.closest('.speaker-btn');
+        const text = button.getAttribute('data-text');
+        if (text) {
+          speakBotReply(text, button);
+        }
+      }
+    });
+
+    // Focus input on load and scroll to bottom
+    window.addEventListener('load', () => {
+      inputField.focus();
+      // Scroll to bottom to show latest messages
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+
+  </script>
+</body>
+</html>

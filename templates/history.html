@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartCare - Chat History</title>
+  
+  <!-- External Resources -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='history.css') }}">
+</head>
+
+<body>
+  <!-- =============================================================================
+       MAIN CONTAINER
+       ============================================================================= -->
+  <div class="history-container">
+    
+    <!-- =============================================================================
+         HEADER SECTION
+         ============================================================================= -->
+    <header>
+      <!-- Navigation Back Button -->
+      <a href="{{ url_for('index') }}" class="back-button">← Back to Chat</a>
+      
+      <!-- Header Content -->
+      <div class="header-main">
+        <h1>My Chat History</h1>
+        <button class="clear-button" onclick="clearHistory()">Clear History</button>
+      </div>
+    </header>
+
+    <!-- Header Divider -->
+    <hr class="header-divider" />
+
+    <!-- =============================================================================
+         MESSAGES SECTION
+         ============================================================================= -->
+    <main class="messages-section">
+      {% if messages %}
+        <!-- Display All Messages -->
+        {% for msg in messages %}
+          <div class="message {{ msg.sender }}">
+            <!-- Sender Information -->
+            <div class="sender">
+              {% if msg.sender == 'user' %}
+                {{ username }}
+              {% else %}
+                SmartCare
+              {% endif %}
+            </div>
+            
+            <!-- Message Text Content -->
+            <div class="text">{{ msg.text }}</div>
+            
+            <!-- Message Timestamp -->
+            <div class="timestamp">
+              {{ msg.timestamp.strftime('%b %d, %Y %I:%M %p') }}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <!-- No Messages State -->
+        <p class="no-messages">No chat history found.</p>
+      {% endif %}
+    </main>
+  </div>
+
+  <!-- =============================================================================
+       JAVASCRIPT FUNCTIONALITY
+       ============================================================================= -->
+  <script>
+    /**
+     * Clears all chat history for the current user
+     * Shows confirmation dialog and handles the API call
+     */
+    function clearHistory() {
+      // Show confirmation dialog
+      if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+        // Send clear history request to server
+        fetch('/clear_history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            // Reload page to show updated state
+            window.location.reload();
+          } else {
+            // Show error message if request failed
+            alert('Error clearing history. Please try again.');
+          }
+        })
+        .catch(error => {
+          // Log error and show user-friendly message
+          console.error('Error:', error);
+          alert('Error clearing history. Please try again.');
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Data files and embeddings
+*.pdf
+*.csv
+*.json
+*.pkl
+*.npz
+*.npy
+data/
+pinecone_dump/
+pinecone_data/
+
+# Database and logs
+*.db
+*.sqlite3
+*.log
+
+# API keys and environment variables
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Exclude non-public scraping scripts
+scrape_mayo.py
+
+# Misc
+*.bak
+*.swp 
