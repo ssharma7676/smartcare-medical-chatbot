@@ -4,6 +4,14 @@ SmartCare is a full-stack AI-powered medical chatbot that provides users with re
 
 ---
 
+## Motivation
+
+Healthcare information is often scattered, complex, or inaccessible when needed most. I built SmartCare to provide immediate, understandable health guidance while exploring the intersection of AI and healthcare in a full-stack application.
+
+## Potential Impact
+
+SmartCare could improve health literacy, provide 24/7 access to useful medical information, and help users make more informed healthcare decisions. It's designed to supplement professional medical advice, not replace it (see disclaimer below).
+
 ## ⚠️ Data Sources & Copyright
 
 SmartCare is designed to work only with public domain medical sources.
