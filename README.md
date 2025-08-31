@@ -4,11 +4,11 @@ SmartCare is a full-stack AI-powered medical chatbot that provides users with re
 
 ---
 
-## Motivation
+## 🎯 Motivation
 
 Healthcare information is often scattered, complex, or inaccessible when needed most. I built SmartCare to provide immediate, understandable health guidance while exploring the intersection of AI and healthcare in a full-stack application.
 
-## Potential Impact
+## 🚀 Potential Impact
 
 SmartCare could improve health literacy, provide 24/7 access to useful medical information, and help users make more informed healthcare decisions. It's designed to supplement professional medical advice, not replace it (see disclaimer below).
 
@@ -56,7 +56,7 @@ See the script and comments for details.
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Getting Started
 
 1. **Clone the Repository**
    ```bash
@@ -112,12 +112,13 @@ See the script and comments for details.
 
 ---
 
-## 🛠️ Extend the Project
+## 🛠️ Tech Stack & Extensibility
 
-You can customize or expand SmartCare to fit your needs:
-- Add custom ingestion logic (see `upload_medlineplus.py`)
-- Modify the retrieval pipeline in `app.py` for new sources
-- Swap or extend vector DBs (Pinecone, Chroma, etc.)
+- **Frontend:** HTML, CSS, JavaScript, React
+- **Backend:** Python, Flask
+- **Database:** Pinecone for vector storage
+- **AI Integration:** Groq
+- Extend the project by adding custom ingestion logic, modifying the retrieval pipeline, or swapping vector databases
 
 ---
 
