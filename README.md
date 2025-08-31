@@ -12,6 +12,8 @@ Healthcare information is often scattered, complex, or inaccessible when needed 
 
 SmartCare could improve health literacy, provide 24/7 access to useful medical information, and help users make more informed healthcare decisions. It's designed to supplement professional medical advice, not replace it (see disclaimer below).
 
+---
+
 ## ⚠️ Data Sources & Copyright
 
 SmartCare is designed to work only with public domain medical sources.
