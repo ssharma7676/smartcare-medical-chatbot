@@ -16,12 +16,12 @@ SmartCare could improve health literacy, provide 24/7 access to useful medical i
 
 ## ⚠️ Data Sources & Copyright
 
-SmartCare is designed to work only with public domain medical sources.
+During development, SmartCare used both public domain sources and non-public domain content for testing and experimentation. The public repository, however, does not include any copyrighted or proprietary data. For clarity:
 
-- ✅ **MedlinePlus:** Included (public domain)
-- 🚫 **Mayo Clinic & Gale Encyclopedia:** Not public domain — no data, code, or embeddings from these are included
+- ✅ **MedlinePlus:** Included and fully supported (public domain)
+- 🚫 **Mayo Clinic & Gale Encyclopedia:** Used in development for testing, but all related code and data have been commented out in this public repo to comply with copyright restrictions
 
-> **Important:** Do not use or distribute non-public domain content with this project.
+> **Important:** Do not include or distribute non-public domain content when using this project. Only public domain sources such as MedlinePlus are supported.
 
 
 ## MedlinePlus Data
